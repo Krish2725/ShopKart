@@ -61,13 +61,13 @@ export const loginCustomer = async(req,res)=>{
         const customerExists = await Customer.findOne({email})
 
         if(!customerExists){
-            return res.status(401)
+            return res.status(401).json({ message: 'Invalid email or password' })
         }
 
         const correctPassword = bcrypt.compareSync(password, customerExists.password)
 
         if(!correctPassword){
-            return res.status(401)
+            return res.status(401).json({ message: 'Invalid email or password' })
         }
 
         const token = genToken(customerExists._id)

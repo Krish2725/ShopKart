@@ -9,19 +9,19 @@ const app = express()
 
 const port = 8081
 app.use(cors({
-    origin: 'http://localhost:5173/',
-    credentials : true
+    origin: 'http://localhost:5174',
+    credentials: true
 }))
 
-mongoose.connect(process.env.dbURL).then(()=>{
+mongoose.connect(process.env.dbURL).then(() => {
     console.log('DB Connected')
-}).catch((err)=>{
+}).catch((err) => {
     console.log(err)
 })
 app.use(express.json())
 app.use(cookieParser())
 app.use('/customers', customerRoutes)
 
-app.listen(port,()=>{
+app.listen(port, () => {
     console.log(`Server Started at ${port}`)
 })
