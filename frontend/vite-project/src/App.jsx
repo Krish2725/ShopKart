@@ -6,6 +6,7 @@ import Register from './pages/Register.jsx'
 import Home from './pages/Home.jsx'
 import Products from './pages/Products.jsx'
 import ProductDetails from './pages/ProductDetails.jsx'
+import Wishlist from './pages/Wishlist.jsx'
 import Logout from './pages/Logout.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
 import PublicRoutes from './components/PublicRoutes.jsx'
@@ -21,6 +22,7 @@ function App() {
           <Route path="/home" element={<ProtectedRoutes><Home /></ProtectedRoutes>} />
           <Route path="/products" element={<Products />} />
           <Route path="/products/:id" element={<ProductDetails />} />
+          <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/logout" element={<Logout />} />
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
@@ -29,5 +31,6 @@ function App() {
     </AuthProvider>
   )
 }
+
 
 export default App

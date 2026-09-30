@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar.jsx';
+import ProductCard from '../components/ProductCard.jsx';
 import axiosInstance from '../../axiosCalls/axios';
 
 function Products() {
-  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -89,85 +88,14 @@ function Products() {
             gap: '2.5rem'
           }}>
             {products.map(product => (
-              <div key={product._id} style={{
-                background: '#fff',
-                borderRadius: '20px',
-                overflow: 'hidden',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05)',
-                border: '1px solid #f1f5f9',
-                display: 'flex',
-                flexDirection: 'column',
-                transition: 'transform 0.2s ease, box-shadow 0.2s ease'
-              }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-5px)';
-                  e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05)';
-                }}>
-                <div style={{ height: '240px', width: '100%', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                  {product.image ? (
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                  ) : (
-                    <span style={{ color: '#94a3b8', fontWeight: '600' }}>PRODUCT IMAGE</span>
-                  )}
-                  {/* Category Pill Over Image */}
-                  <div style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(255, 255, 255, 0.9)', color: '#4f46e5', padding: '0.35rem 0.85rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '700', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                    {product.category}
-                  </div>
-                </div>
-
-                <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: '700', margin: '0 0 0.75rem', color: '#0f172a', lineHeight: '1.4' }}>
-                    {product.name}
-                  </h3>
-
-                  <div style={{ display: 'flex', alignItems: 'baseline', marginBottom: '0.75rem' }}>
-                    <span style={{ fontSize: '1.5rem', fontWeight: '800', color: '#0f172a' }}>
-                      ₹{product.price?.toLocaleString('en-IN') || product.price}
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem', color: product.stock > 0 ? '#10b981' : '#ef4444', marginBottom: '1.5rem', fontWeight: '600' }}>
-                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: product.stock > 0 ? '#10b981' : '#ef4444', marginRight: '6px' }}></span>
-                    {product.stock > 0 ? `${product.stock} units left` : 'Out of stock'}
-                  </div>
-
-                  <button
-                    onClick={() => navigate(`/products/${product._id}`)}
-                    style={{
-                      marginTop: 'auto',
-                      width: '100%',
-                      padding: '0.85rem',
-                      background: '#0f172a',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '12px',
-                      fontWeight: '600',
-                      fontSize: '0.95rem',
-                      cursor: 'pointer',
-                      transition: 'background 0.2s, transform 0.1s'
-                    }}
-                    onMouseOver={(e) => e.target.style.background = '#334155'}
-                    onMouseOut={(e) => e.target.style.background = '#0f172a'}
-                    onMouseDown={(e) => e.target.style.transform = 'scale(0.98)'}
-                    onMouseUp={(e) => e.target.style.transform = 'scale(1)'}>
-                    View Details
-                  </button>
-                </div>
-              </div>
+              <ProductCard key={product._id} product={product} />
             ))}
           </div>
         )}
       </div>
     </div>
   );
+
 }
 
 export default Products;

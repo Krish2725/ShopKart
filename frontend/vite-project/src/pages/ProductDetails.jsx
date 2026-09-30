@@ -2,13 +2,83 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar.jsx';
 import axiosInstance from '../../axiosCalls/axios';
+import { useAuth } from '../context/AuthContext';
 
 function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user, checkAuth } = useAuth();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const isProductInWishlist = Boolean(
+    user?.wishlist?.some((item) => {
+      const wishId = item?._id || item;
+      return wishId && wishId.toString() === id?.toString();
+    })
+  );
+
+  const [isWishlisted, setIsWishlisted] = useState(isProductInWishlist);
+  const [isSaving, setIsSaving] = useState(false);
+  const [wishlistError, setWishlistError] = useState('');
+
+  useEffect(() => {
+    setIsWishlisted(isProductInWishlist);
+  }, [isProductInWishlist]);
+
+  useEffect(() => {
+    if (wishlistError) {
+      const timer = setTimeout(() => setWishlistError(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [wishlistError]);
+
+  const handleWishlistClick = async (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    if (isSaving) return;
+
+    setIsSaving(true);
+    setWishlistError('');
+
+    try {
+      if (!isWishlisted) {
+        const response = await axiosInstance.post(`/wishlist/${id}`);
+        if (response.status === 200 || response.status === 201 || response.data?.success) {
+          setIsWishlisted(true);
+          if (checkAuth) checkAuth();
+        } else {
+          setWishlistError(response.data?.message || 'Failed to add to wishlist.');
+        }
+      } else {
+        const response = await axiosInstance.delete(`/wishlist/${id}`);
+        if (response.status === 200 || response.data?.success) {
+          setIsWishlisted(false);
+          if (checkAuth) checkAuth();
+        } else {
+          setWishlistError(response.data?.message || 'Failed to remove from wishlist.');
+        }
+      }
+    } catch (err) {
+      console.error('Wishlist error in ProductDetails:', err);
+      if (err.response?.status === 401) {
+        setWishlistError('Please log in to add items to your wishlist.');
+      } else if (err.response?.data?.message) {
+        setWishlistError(err.response.data.message);
+      } else if (err.request) {
+        setWishlistError('Network error: Unable to connect to server.');
+      } else {
+        setWishlistError('Failed to update wishlist. Please try again.');
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
 
   useEffect(() => {
     fetchProduct();
@@ -99,27 +169,80 @@ function ProductDetails() {
                 {product.stock > 0 ? `${product.stock} units left in stock` : 'Out of stock'}
               </div>
               
-              <button 
-                disabled={product.stock <= 0}
-                style={{
-                  width: '100%',
-                  padding: '1rem',
-                  background: product.stock > 0 ? '#4f46e5' : '#cbd5e1',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontWeight: '700',
-                  fontSize: '1.1rem',
-                  cursor: product.stock > 0 ? 'pointer' : 'not-allowed',
-                  transition: 'background 0.2s, transform 0.1s'
-                }}
-                onMouseOver={(e) => product.stock > 0 && (e.target.style.background = '#4338ca')}
-                onMouseOut={(e) => product.stock > 0 && (e.target.style.background = '#4f46e5')}
-                onMouseDown={(e) => product.stock > 0 && (e.target.style.transform = 'scale(0.98)')}
-                onMouseUp={(e) => product.stock > 0 && (e.target.style.transform = 'scale(1)')}
-              >
-                {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                <button 
+                  disabled={product.stock <= 0}
+                  style={{
+                    width: '100%',
+                    padding: '1rem',
+                    background: product.stock > 0 ? '#4f46e5' : '#cbd5e1',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontWeight: '700',
+                    fontSize: '1.1rem',
+                    cursor: product.stock > 0 ? 'pointer' : 'not-allowed',
+                    transition: 'background 0.2s, transform 0.1s'
+                  }}
+                  onMouseOver={(e) => product.stock > 0 && (e.target.style.background = '#4338ca')}
+                  onMouseOut={(e) => product.stock > 0 && (e.target.style.background = '#4f46e5')}
+                  onMouseDown={(e) => product.stock > 0 && (e.target.style.transform = 'scale(0.98)')}
+                  onMouseUp={(e) => product.stock > 0 && (e.target.style.transform = 'scale(1)')}
+                >
+                  {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+                </button>
+
+                <button
+                  type="button"
+                  id={`wishlist-detail-btn-${id}`}
+                  onClick={handleWishlistClick}
+                  disabled={isSaving}
+                  aria-busy={isSaving}
+                  style={{
+                    width: '100%',
+                    padding: '0.9rem',
+                    borderRadius: '12px',
+                    fontWeight: '700',
+                    fontSize: '1.05rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: isSaving ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s ease',
+                    border: isWishlisted ? '1px solid #fecdd3' : '1px solid #cbd5e1',
+                    background: isSaving ? '#f8fafc' : isWishlisted ? '#fff1f2' : '#ffffff',
+                    color: isSaving ? '#64748b' : isWishlisted ? '#e11d48' : '#0f172a',
+                    boxShadow: isWishlisted ? '0 2px 8px rgba(225, 29, 72, 0.12)' : 'none',
+                    opacity: isSaving ? 0.75 : 1
+                  }}
+                >
+                  {isSaving ? '⏳ Saving...' : isWishlisted ? '♥ Added to Wishlist' : '♡ Add to Wishlist'}
+                </button>
+
+                {wishlistError && (
+                  <div
+                    className="wishlist-error"
+                    role="alert"
+                    style={{
+                      background: '#fef2f2',
+                      border: '1px solid #fecaca',
+                      color: '#b91c1c',
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      padding: '0.6rem 0.85rem',
+                      borderRadius: '8px',
+                      textAlign: 'center',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.35rem'
+                    }}
+                  >
+                    <span>⚠️</span>
+                    <span>{wishlistError}</span>
+                  </div>
+                )}
+              </div>
             </div>
             
           </div>

@@ -48,11 +48,22 @@ function Navbar() {
             textDecoration: 'none',
             color: '#0f172a',
             fontWeight: 600,
+            fontSize: '0.95rem'
+          }}
+        >
+          Products
+        </Link>
+        <Link 
+          to="/wishlist" 
+          style={{
+            textDecoration: 'none',
+            color: '#0f172a',
+            fontWeight: 600,
             fontSize: '0.95rem',
             marginRight: '0.5rem'
           }}
         >
-          Products
+          Wishlist{user && Array.isArray(user.wishlist) && user.wishlist.length > 0 ? ` (${user.wishlist.length})` : ''}
         </Link>
         {user ? (
           <>
