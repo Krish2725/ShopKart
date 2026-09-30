@@ -4,12 +4,13 @@ import dotenv from "dotenv"
 import cookieParser from "cookie-parser";
 import cors from 'cors'
 import customerRoutes from "./routes/customer.routes.js";
+import productRoutes from "./routes/product.routes.js";
 dotenv.config()
 const app = express()
 
 const port = 8081
 app.use(cors({
-    origin: 'http://localhost:5174',
+    origin: 'http://localhost:5173',
     credentials: true
 }))
 
@@ -21,6 +22,7 @@ mongoose.connect(process.env.dbURL).then(() => {
 app.use(express.json())
 app.use(cookieParser())
 app.use('/customers', customerRoutes)
+app.use('/products', productRoutes)
 
 app.listen(port, () => {
     console.log(`Server Started at ${port}`)

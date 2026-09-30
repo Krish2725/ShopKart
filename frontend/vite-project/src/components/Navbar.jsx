@@ -42,6 +42,18 @@ function Navbar() {
       </Link>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+        <Link 
+          to="/products" 
+          style={{
+            textDecoration: 'none',
+            color: '#0f172a',
+            fontWeight: 600,
+            fontSize: '0.95rem',
+            marginRight: '0.5rem'
+          }}
+        >
+          Products
+        </Link>
         {user ? (
           <>
             <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 500 }}>

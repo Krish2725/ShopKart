@@ -21,6 +21,13 @@ const customerSchema = new mongoose.Schema({
     createdAt:{
         type:Date,
         default: Date.now
+    },
+    wishlist:{
+        type:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref:"Product"
+    }],
+    default :[]
     }
 })
 

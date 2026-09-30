@@ -1,0 +1,132 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar.jsx';
+import axiosInstance from '../../axiosCalls/axios';
+
+function ProductDetails() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetchProduct();
+  }, [id]);
+
+  const fetchProduct = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await axiosInstance.get(`/products/${id}`);
+      if (response.data.success) {
+        setProduct(response.data.product);
+      } else {
+        setError('Something went wrong while loading products.');
+      }
+    } catch (err) {
+      if (err.response && err.response.status === 404) {
+        setError('No products found.');
+      } else {
+        setError('Something went wrong while loading products.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f4f6fb' }}>
+      <Navbar />
+      
+      <div style={{ flex: 1, padding: '3rem 2rem', maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
+        <button 
+          onClick={() => navigate('/products')}
+          style={{ marginBottom: '2rem', padding: '0.5rem 1rem', background: 'transparent', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600', color: '#475569' }}
+        >
+          &larr; Back to Products
+        </button>
+
+        {loading ? (
+          <div style={{ textAlign: 'center', marginTop: '4rem', fontSize: '1.25rem', color: '#64748b' }}>
+            <div className="spinner" style={{ margin: '0 auto 1rem', width: '40px', height: '40px', borderWidth: '4px', borderTopColor: '#4f46e5' }}></div>
+            Loading products...
+          </div>
+        ) : error ? (
+          <div style={{ color: '#ef4444', textAlign: 'center', background: '#fef2f2', padding: '2rem', borderRadius: '12px', border: '1px solid #f87171', fontSize: '1.1rem', fontWeight: '500' }}>
+            {error}
+          </div>
+        ) : !product ? (
+          <div style={{ textAlign: 'center', color: '#64748b', marginTop: '2rem', fontSize: '1.2rem' }}>
+            No products found.
+          </div>
+        ) : (
+          <div style={{ background: '#fff', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))' }}>
+            
+            <div style={{ background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px', padding: '2rem' }}>
+              {product.image ? (
+                <img 
+                  src={product.image} 
+                  alt={product.name} 
+                  style={{ width: '100%', maxHeight: '400px', objectFit: 'contain' }} 
+                />
+              ) : (
+                <span style={{ color: '#94a3b8', fontWeight: '600', fontSize: '1.5rem' }}>PRODUCT IMAGE</span>
+              )}
+            </div>
+            
+            <div style={{ padding: '3rem' }}>
+              <div style={{ display: 'inline-block', background: '#e0e7ff', color: '#4338ca', padding: '0.4rem 1rem', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: '700', marginBottom: '1.5rem' }}>
+                {product.category}
+              </div>
+              
+              <h1 style={{ fontSize: '2.5rem', fontWeight: '800', margin: '0 0 1rem', color: '#0f172a', lineHeight: '1.2', letterSpacing: '-0.03em' }}>
+                {product.name}
+              </h1>
+              
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <span style={{ fontSize: '2rem', fontWeight: '800', color: '#0f172a' }}>
+                  ₹{product.price?.toLocaleString('en-IN') || product.price}
+                </span>
+              </div>
+              
+              <p style={{ fontSize: '1.05rem', color: '#64748b', lineHeight: '1.6', marginBottom: '2rem' }}>
+                {product.description}
+              </p>
+              
+              <div style={{ display: 'flex', alignItems: 'center', fontSize: '1rem', color: product.stock > 0 ? '#10b981' : '#ef4444', marginBottom: '2.5rem', fontWeight: '600' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: product.stock > 0 ? '#10b981' : '#ef4444', marginRight: '8px' }}></span>
+                {product.stock > 0 ? `${product.stock} units left in stock` : 'Out of stock'}
+              </div>
+              
+              <button 
+                disabled={product.stock <= 0}
+                style={{
+                  width: '100%',
+                  padding: '1rem',
+                  background: product.stock > 0 ? '#4f46e5' : '#cbd5e1',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontWeight: '700',
+                  fontSize: '1.1rem',
+                  cursor: product.stock > 0 ? 'pointer' : 'not-allowed',
+                  transition: 'background 0.2s, transform 0.1s'
+                }}
+                onMouseOver={(e) => product.stock > 0 && (e.target.style.background = '#4338ca')}
+                onMouseOut={(e) => product.stock > 0 && (e.target.style.background = '#4f46e5')}
+                onMouseDown={(e) => product.stock > 0 && (e.target.style.transform = 'scale(0.98)')}
+                onMouseUp={(e) => product.stock > 0 && (e.target.style.transform = 'scale(1)')}
+              >
+                {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+              </button>
+            </div>
+            
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default ProductDetails;
