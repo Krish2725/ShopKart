@@ -126,3 +126,35 @@ export const updateProdQuantity= async (req,res)=>{
         "cart": req.customer.cart
     });
 }
+
+
+export const deleteFromCart = async(req,res)=>{
+    const productId = req.params.productId;
+    if(!mongoose.Types.ObjectId.isValid(productId)){
+        return res.status(400).json({
+            message:"Invalid product ID"
+        });
+    }
+
+    const cartItem = req.customer.cart.find(
+        item=> item.product.toString() === productId
+    )
+
+    if(!cartItem){
+        return res.status(404).json({
+            message: "Product not in cart"
+        });
+    }
+    else{
+        req.customer.cart= req.customer.cart.filter(
+            item => item.product.toString() !== productId
+        )
+        await req.customer.save()
+        return res.status(200).json({
+            "success":true,
+            "message":"Cart updated successfully",
+            "cart": req.customer.cart
+        })
+    }
+
+}
