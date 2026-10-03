@@ -1,4 +1,5 @@
 // import Customer from "../models/customer.model.js";
+import Customer from "../models/customer.model.js";
 import Product from "../models/product.model.js";
 import mongoose from "mongoose";
 
@@ -52,6 +53,20 @@ export const addToCart = async(req,res)=>{
             "message" : "Successfully Added to Cart",
             "cart" : req.customer.cart
         });
+    }
+}
+
+export const getCartItems = async(req,res)=>{
+    try{
+        return res.status(200).json({
+            "success": true,
+            "cart" : req.customer.cart
+        });
+    }
+    catch(error){
+        return res.status(500).json({
+            message: "Failed to fetch cart items"
+        })
     }
 }
 
