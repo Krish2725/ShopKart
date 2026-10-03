@@ -58,9 +58,10 @@ export const addToCart = async(req,res)=>{
 
 export const getCartItems = async(req,res)=>{
     try{
+        const customer = await Customer.findById(req.customer._id).populate("cart.product")
         return res.status(200).json({
             "success": true,
-            "cart" : req.customer.cart
+            "cart" : customer.cart
         });
     }
     catch(error){
