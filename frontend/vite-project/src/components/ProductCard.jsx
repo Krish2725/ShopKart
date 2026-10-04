@@ -1,23 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../../axiosCalls/axios';
-import { useAuth } from '../context/AuthContext';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axiosInstance from "../../axiosCalls/axios";
+import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 
 function ProductCard({ product, onWishlistChange }) {
   const navigate = useNavigate();
   const { user, checkAuth } = useAuth();
+  const { addToCart, cartItems } = useCart();
 
   // Check if product is already in user's wishlist
   const isProductInWishlist = Boolean(
     user?.wishlist?.some((item) => {
       const id = item?._id || item;
       return id && id.toString() === product._id?.toString();
-    })
+    }),
   );
 
   const [isWishlisted, setIsWishlisted] = useState(isProductInWishlist);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [addingToCart, setAddingToCart] = useState(false);
 
   // Keep in sync with user's wishlist if user context updates
   useEffect(() => {
@@ -27,11 +30,25 @@ function ProductCard({ product, onWishlistChange }) {
   // Auto-clear error after 5 seconds
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => setError(''), 5000);
+      const timer = setTimeout(() => setError(""), 5000);
       return () => clearTimeout(timer);
     }
   }, [error]);
+  const handleAddToCart = async () => {
+    setAddingToCart(true);
 
+    try {
+      await addToCart(product._id);
+    } catch (error) {
+      console.error("Failed to add product to cart:", error);
+    } finally {
+      setAddingToCart(false);
+    }
+  };
+  const isInCart = cartItems.some((item) => {
+    const cartProductId = item.product?._id || item.product;
+    return cartProductId?.toString() === product._id?.toString();
+  });
   const handleWishlistClick = async (e) => {
     // 1. Prevent page refresh & event bubbling
     if (e) {
@@ -45,18 +62,22 @@ function ProductCard({ product, onWishlistChange }) {
     }
 
     setIsSaving(true);
-    setError('');
+    setError("");
 
     try {
       if (!isWishlisted) {
         // Add to Wishlist
         const response = await axiosInstance.post(`/wishlist/${product._id}`);
-        if (response.status === 200 || response.status === 201 || response.data?.success) {
+        if (
+          response.status === 200 ||
+          response.status === 201 ||
+          response.data?.success
+        ) {
           setIsWishlisted(true);
           if (onWishlistChange) onWishlistChange(product._id, true);
           if (checkAuth) checkAuth();
         } else {
-          setError(response.data?.message || 'Failed to add to wishlist.');
+          setError(response.data?.message || "Failed to add to wishlist.");
         }
       } else {
         // Remove from Wishlist (toggle)
@@ -66,20 +87,20 @@ function ProductCard({ product, onWishlistChange }) {
           if (onWishlistChange) onWishlistChange(product._id, false);
           if (checkAuth) checkAuth();
         } else {
-          setError(response.data?.message || 'Failed to remove from wishlist.');
+          setError(response.data?.message || "Failed to remove from wishlist.");
         }
       }
     } catch (err) {
-      console.error('Wishlist API error:', err);
+      console.error("Wishlist API error:", err);
       // Handle API failures with useful error messages
       if (err.response?.status === 401) {
-        setError('Please log in to add items to your wishlist.');
+        setError("Please log in to add items to your wishlist.");
       } else if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else if (err.request) {
-        setError('Network error: Unable to connect to server.');
+        setError("Network error: Unable to connect to server.");
       } else {
-        setError('Failed to update wishlist. Please try again.');
+        setError("Failed to update wishlist. Please try again.");
       }
     } finally {
       setIsSaving(false);
@@ -87,59 +108,73 @@ function ProductCard({ product, onWishlistChange }) {
   };
 
   // Button label according to required states
-  let buttonText = '♡ Add to Wishlist';
+  let buttonText = "♡ Add to Wishlist";
   if (isSaving) {
-    buttonText = '⏳ Saving...';
+    buttonText = "⏳ Saving...";
   } else if (isWishlisted) {
-    buttonText = '♥ Added to Wishlist';
+    buttonText = "♥ Added to Wishlist";
   }
 
   return (
     <div
       className="product-card"
       style={{
-        background: '#ffffff',
-        borderRadius: '20px',
-        overflow: 'hidden',
-        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05)',
-        border: '1px solid #f1f5f9',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-        transition: 'transform 0.25s ease, box-shadow 0.25s ease'
+        background: "#ffffff",
+        borderRadius: "20px",
+        overflow: "hidden",
+        boxShadow:
+          "0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05)",
+        border: "1px solid #f1f5f9",
+        display: "flex",
+        flexDirection: "column",
+        position: "relative",
+        transition: "transform 0.25s ease, box-shadow 0.25s ease",
       }}
       onMouseOver={(e) => {
-        e.currentTarget.style.transform = 'translateY(-6px)';
-        e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.08)';
+        e.currentTarget.style.transform = "translateY(-6px)";
+        e.currentTarget.style.boxShadow =
+          "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.08)";
       }}
       onMouseOut={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05)';
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.boxShadow =
+          "0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05)";
       }}
     >
       {/* Product Image & Top Overlays */}
       <div
         style={{
-          height: '240px',
-          width: '100%',
-          background: '#f8fafc',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative',
-          overflow: 'hidden'
+          height: "240px",
+          width: "100%",
+          background: "#f8fafc",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          position: "relative",
+          overflow: "hidden",
         }}
       >
         {product.image ? (
           <img
             src={product.image}
             alt={product.name}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s ease' }}
-            onMouseOver={(e) => (e.target.style.transform = 'scale(1.05)')}
-            onMouseOut={(e) => (e.target.style.transform = 'scale(1)')}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              transition: "transform 0.3s ease",
+            }}
+            onMouseOver={(e) => (e.target.style.transform = "scale(1.05)")}
+            onMouseOut={(e) => (e.target.style.transform = "scale(1)")}
           />
         ) : (
-          <span style={{ color: '#94a3b8', fontWeight: '600', letterSpacing: '0.05em' }}>
+          <span
+            style={{
+              color: "#94a3b8",
+              fontWeight: "600",
+              letterSpacing: "0.05em",
+            }}
+          >
             PRODUCT IMAGE
           </span>
         )}
@@ -148,17 +183,17 @@ function ProductCard({ product, onWishlistChange }) {
         {product.category && (
           <div
             style={{
-              position: 'absolute',
-              top: '1rem',
-              right: '1rem',
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(4px)',
-              color: '#4f46e5',
-              padding: '0.35rem 0.85rem',
-              borderRadius: '9999px',
-              fontSize: '0.75rem',
-              fontWeight: '700',
-              boxShadow: '0 2px 6px rgba(0,0,0,0.08)'
+              position: "absolute",
+              top: "1rem",
+              right: "1rem",
+              background: "rgba(255, 255, 255, 0.95)",
+              backdropFilter: "blur(4px)",
+              color: "#4f46e5",
+              padding: "0.35rem 0.85rem",
+              borderRadius: "9999px",
+              fontSize: "0.75rem",
+              fontWeight: "700",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
             }}
           >
             {product.category}
@@ -167,55 +202,77 @@ function ProductCard({ product, onWishlistChange }) {
       </div>
 
       {/* Product Card Body */}
-      <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
+      <div
+        style={{
+          padding: "1.5rem",
+          display: "flex",
+          flexDirection: "column",
+          flex: 1,
+        }}
+      >
         <h3
           style={{
-            fontSize: '1.2rem',
-            fontWeight: '700',
-            margin: '0 0 0.5rem',
-            color: '#0f172a',
-            lineHeight: '1.4',
-            display: '-webkit-box',
+            fontSize: "1.2rem",
+            fontWeight: "700",
+            margin: "0 0 0.5rem",
+            color: "#0f172a",
+            lineHeight: "1.4",
+            display: "-webkit-box",
             WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-            minHeight: '2.8rem'
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            minHeight: "2.8rem",
           }}
           title={product.name}
         >
           {product.name}
         </h3>
 
-        <div style={{ display: 'flex', alignItems: 'baseline', marginBottom: '0.75rem' }}>
-          <span style={{ fontSize: '1.45rem', fontWeight: '800', color: '#0f172a' }}>
-            ₹{product.price?.toLocaleString('en-IN') || product.price}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            marginBottom: "0.75rem",
+          }}
+        >
+          <span
+            style={{ fontSize: "1.45rem", fontWeight: "800", color: "#0f172a" }}
+          >
+            ₹{product.price?.toLocaleString("en-IN") || product.price}
           </span>
         </div>
 
         <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            fontSize: '0.875rem',
-            color: product.stock > 0 ? '#10b981' : '#ef4444',
-            marginBottom: '1.25rem',
-            fontWeight: '600'
+            display: "flex",
+            alignItems: "center",
+            fontSize: "0.875rem",
+            color: product.stock > 0 ? "#10b981" : "#ef4444",
+            marginBottom: "1.25rem",
+            fontWeight: "600",
           }}
         >
           <span
             style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              background: product.stock > 0 ? '#10b981' : '#ef4444',
-              marginRight: '6px'
+              width: "8px",
+              height: "8px",
+              borderRadius: "50%",
+              background: product.stock > 0 ? "#10b981" : "#ef4444",
+              marginRight: "6px",
             }}
           ></span>
-          {product.stock > 0 ? `${product.stock} units left` : 'Out of stock'}
+          {product.stock > 0 ? `${product.stock} units left` : "Out of stock"}
         </div>
 
         {/* Card Action Buttons */}
-        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+        <div
+          style={{
+            marginTop: "auto",
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.65rem",
+          }}
+        >
           {/* Wishlist Button with exact state text & icons */}
           <button
             type="button"
@@ -224,69 +281,130 @@ function ProductCard({ product, onWishlistChange }) {
             onClick={handleWishlistClick}
             disabled={isSaving}
             aria-busy={isSaving}
-            aria-label={isWishlisted ? 'Added to Wishlist' : 'Add to Wishlist'}
+            aria-label={isWishlisted ? "Added to Wishlist" : "Add to Wishlist"}
             style={{
-              width: '100%',
-              padding: '0.75rem 1rem',
-              borderRadius: '12px',
-              fontWeight: '700',
-              fontSize: '0.925rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.4rem',
-              cursor: isSaving ? 'not-allowed' : 'pointer',
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              border: isWishlisted
-                ? '1px solid #fecdd3'
-                : '1px solid #e2e8f0',
+              width: "100%",
+              padding: "0.75rem 1rem",
+              borderRadius: "12px",
+              fontWeight: "700",
+              fontSize: "0.925rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.4rem",
+              cursor: isSaving ? "not-allowed" : "pointer",
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              border: isWishlisted ? "1px solid #fecdd3" : "1px solid #e2e8f0",
               background: isSaving
-                ? '#f8fafc'
+                ? "#f8fafc"
                 : isWishlisted
-                ? '#fff1f2'
-                : '#ffffff',
+                  ? "#fff1f2"
+                  : "#ffffff",
               color: isSaving
-                ? '#64748b'
+                ? "#64748b"
                 : isWishlisted
-                ? '#e11d48'
-                : '#334155',
+                  ? "#e11d48"
+                  : "#334155",
               boxShadow: isWishlisted
-                ? '0 2px 8px rgba(225, 29, 72, 0.12)'
-                : '0 1px 3px rgba(0, 0, 0, 0.04)',
-              opacity: isSaving ? 0.75 : 1
+                ? "0 2px 8px rgba(225, 29, 72, 0.12)"
+                : "0 1px 3px rgba(0, 0, 0, 0.04)",
+              opacity: isSaving ? 0.75 : 1,
             }}
             onMouseOver={(e) => {
               if (!isSaving) {
                 if (isWishlisted) {
-                  e.currentTarget.style.background = '#ffe4e6';
+                  e.currentTarget.style.background = "#ffe4e6";
                 } else {
-                  e.currentTarget.style.background = '#fff1f2';
-                  e.currentTarget.style.borderColor = '#fecdd3';
-                  e.currentTarget.style.color = '#e11d48';
+                  e.currentTarget.style.background = "#fff1f2";
+                  e.currentTarget.style.borderColor = "#fecdd3";
+                  e.currentTarget.style.color = "#e11d48";
                 }
               }
             }}
             onMouseOut={(e) => {
               if (!isSaving) {
                 if (isWishlisted) {
-                  e.currentTarget.style.background = '#fff1f2';
-                  e.currentTarget.style.borderColor = '#fecdd3';
-                  e.currentTarget.style.color = '#e11d48';
+                  e.currentTarget.style.background = "#fff1f2";
+                  e.currentTarget.style.borderColor = "#fecdd3";
+                  e.currentTarget.style.color = "#e11d48";
                 } else {
-                  e.currentTarget.style.background = '#ffffff';
-                  e.currentTarget.style.borderColor = '#e2e8f0';
-                  e.currentTarget.style.color = '#334155';
+                  e.currentTarget.style.background = "#ffffff";
+                  e.currentTarget.style.borderColor = "#e2e8f0";
+                  e.currentTarget.style.color = "#334155";
                 }
               }
             }}
             onMouseDown={(e) => {
-              if (!isSaving) e.currentTarget.style.transform = 'scale(0.98)';
+              if (!isSaving) e.currentTarget.style.transform = "scale(0.98)";
             }}
             onMouseUp={(e) => {
-              if (!isSaving) e.currentTarget.style.transform = 'scale(1)';
+              if (!isSaving) e.currentTarget.style.transform = "scale(1)";
             }}
           >
             {buttonText}
+          </button>
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={addingToCart || product.stock === 0}
+            style={{
+              width: "100%",
+              padding: "0.75rem 1rem",
+              borderRadius: "12px",
+              border: "1px solid #c7d2fe",
+              background: "#eef2ff",
+              color: "#4f46e5",
+              fontWeight: "700",
+              fontSize: "0.925rem",
+              cursor:
+                addingToCart || product.stock === 0 ? "not-allowed" : "pointer",
+              transition: "all 0.2s ease",
+              opacity: product.stock === 0 ? 0.6 : 1,
+            }}
+            onMouseOver={(e) => {
+              if (!addingToCart && product.stock > 0) {
+                e.currentTarget.style.background = "#e0e7ff";
+                e.currentTarget.style.borderColor = "#a5b4fc";
+              }
+            }}
+            onMouseOut={(e) => {
+              if (!addingToCart && product.stock > 0) {
+                e.currentTarget.style.background = "#eef2ff";
+                e.currentTarget.style.borderColor = "#c7d2fe";
+              }
+            }}
+          >
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.45rem",
+              }}
+            >
+              <svg
+                width="17"
+                height="17"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="9" cy="20" r="1" />
+                <circle cx="19" cy="20" r="1" />
+                <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L21 8H6" />
+              </svg>
+
+              {addingToCart
+                ? "Adding..."
+                : product.stock === 0
+                  ? "Out of Stock"
+                  : isInCart
+                    ? "Add Another"
+                    : "Add to Cart"}
+            </span>
           </button>
 
           {/* Useful Error Message on API Failure */}
@@ -295,20 +413,20 @@ function ProductCard({ product, onWishlistChange }) {
               className="wishlist-error"
               role="alert"
               style={{
-                background: '#fef2f2',
-                border: '1px solid #fecaca',
-                color: '#b91c1c',
-                fontSize: '0.8rem',
-                fontWeight: '600',
-                padding: '0.5rem 0.75rem',
-                borderRadius: '8px',
-                textAlign: 'center',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.35rem',
-                lineHeight: '1.3',
-                animation: 'fadeIn 0.2s ease-in-out'
+                background: "#fef2f2",
+                border: "1px solid #fecaca",
+                color: "#b91c1c",
+                fontSize: "0.8rem",
+                fontWeight: "600",
+                padding: "0.5rem 0.75rem",
+                borderRadius: "8px",
+                textAlign: "center",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.35rem",
+                lineHeight: "1.3",
+                animation: "fadeIn 0.2s ease-in-out",
               }}
             >
               <span>⚠️</span>
@@ -321,21 +439,21 @@ function ProductCard({ product, onWishlistChange }) {
             type="button"
             onClick={() => navigate(`/products/${product._id}`)}
             style={{
-              width: '100%',
-              padding: '0.75rem 1rem',
-              background: '#0f172a',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '12px',
-              fontWeight: '600',
-              fontSize: '0.925rem',
-              cursor: 'pointer',
-              transition: 'background 0.2s, transform 0.1s'
+              width: "100%",
+              padding: "0.75rem 1rem",
+              background: "#0f172a",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: "12px",
+              fontWeight: "600",
+              fontSize: "0.925rem",
+              cursor: "pointer",
+              transition: "background 0.2s, transform 0.1s",
             }}
-            onMouseOver={(e) => (e.target.style.background = '#334155')}
-            onMouseOut={(e) => (e.target.style.background = '#0f172a')}
-            onMouseDown={(e) => (e.target.style.transform = 'scale(0.98)')}
-            onMouseUp={(e) => (e.target.style.transform = 'scale(1)')}
+            onMouseOver={(e) => (e.target.style.background = "#334155")}
+            onMouseOut={(e) => (e.target.style.background = "#0f172a")}
+            onMouseDown={(e) => (e.target.style.transform = "scale(0.98)")}
+            onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
           >
             View Details
           </button>
