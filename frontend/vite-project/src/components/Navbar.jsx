@@ -35,6 +35,7 @@ function Navbar() {
         boxSizing: "border-box",
       }}
     >
+      {/* Logo */}
       <Link
         to="/home"
         style={{
@@ -83,6 +84,7 @@ function Navbar() {
           gap: "1.25rem",
         }}
       >
+        {/* Products */}
         <Link
           to="/products"
           style={{
@@ -95,6 +97,7 @@ function Navbar() {
           Products
         </Link>
 
+        {/* Wishlist */}
         <Link
           to="/wishlist"
           style={{
@@ -107,12 +110,13 @@ function Navbar() {
         >
           Wishlist
           {user &&
-          Array.isArray(user.wishlist) &&
-          user.wishlist.length > 0
+            Array.isArray(user.wishlist) &&
+            user.wishlist.length > 0
             ? ` (${user.wishlist.length})`
             : ""}
         </Link>
 
+        {/* Cart */}
         <Link
           to="/cart"
           style={{
@@ -125,6 +129,22 @@ function Navbar() {
           Cart ({totalItems})
         </Link>
 
+        {/* My Orders */}
+        {user && (
+          <Link
+            to="/orders"
+            style={{
+              textDecoration: "none",
+              color: "#0f172a",
+              fontWeight: 600,
+              fontSize: "0.95rem",
+            }}
+          >
+            My Orders
+          </Link>
+        )}
+
+        {/* User / Logout */}
         {user ? (
           <>
             <span

@@ -166,7 +166,7 @@ const Cart = () => {
             <h2>Order Summary</h2>
             <p>Items: {totalItems}</p>
             <p>Subtotal: ₹{subtotal}</p>
-            <button>Proceed to Checkout</button>
+            <button onClick={() => navigate("/checkout")}>Proceed to Checkout</button>
           </div>
         </div>
       </div>

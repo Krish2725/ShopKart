@@ -13,6 +13,10 @@ import PublicRoutes from "./components/PublicRoutes.jsx";
 import ProtectedRoutes from "./components/ProtectedRoutes.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
 import Cart from "./pages/Cart.jsx";
+import Checkout from "./pages/Checkout.jsx";
+import OrderDetails from "./pages/OrderDetails.jsx";
+import Orders from "./pages/Orders.jsx";
+
 function App() {
   return (
     <AuthProvider>
@@ -51,9 +55,54 @@ function App() {
                 </ProtectedRoutes>
               }
             />
-            <Route path="/products" element={<Products />} />
-            <Route path="/products/:id" element={<ProductDetails />} />
-            <Route path="/wishlist" element={<Wishlist />} />
+            <Route
+              path="/checkout"
+              element={
+                <ProtectedRoutes>
+                  <Checkout />
+                </ProtectedRoutes>
+              }
+            />
+            <Route
+              path="/orders"
+              element={
+                <ProtectedRoutes>
+                  <Orders />
+                </ProtectedRoutes>
+              }
+            />
+            <Route
+              path="/orders/:id"
+              element={
+                <ProtectedRoutes>
+                  <OrderDetails />
+                </ProtectedRoutes>
+              }
+            />
+            <Route
+              path="/products"
+              element={
+                <ProtectedRoutes>
+                  <Products />
+                </ProtectedRoutes>
+              }
+            />
+            <Route
+              path="/products/:id"
+              element={
+                <ProtectedRoutes>
+                  <ProductDetails />
+                </ProtectedRoutes>
+              }
+            />
+            <Route
+              path="/wishlist"
+              element={
+                <ProtectedRoutes>
+                  <Wishlist />
+                </ProtectedRoutes>
+              }
+            />
             <Route path="/logout" element={<Logout />} />
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="*" element={<Navigate to="/login" replace />} />
