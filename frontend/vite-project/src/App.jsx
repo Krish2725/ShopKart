@@ -104,8 +104,8 @@ function App() {
               }
             />
             <Route path="/logout" element={<Logout />} />
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="*" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<Navigate to="/home" replace />} />
+            <Route path="*" element={<Navigate to="/home" replace />} />
           </Routes>
         </BrowserRouter>
       </CartProvider>

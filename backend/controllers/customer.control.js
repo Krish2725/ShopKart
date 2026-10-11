@@ -2,9 +2,15 @@ import Customer from "../models/customer.model.js"
 import bcrypt from 'bcrypt'
 import genToken from "../utils/generateToken.js"
 
-const cookieOptions= {
-    httpOnly: true
-}
+const isProduction = process.env.NODE_ENV === "production";
+
+const cookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    path: "/",
+    maxAge: 7 * 24 * 60 * 60 * 1000
+};
 export const registerCustomer = async(req,res)=>{
 
     const {fullName, email, password, phone} = req.body
@@ -90,7 +96,12 @@ export const getCustomer = (req , res)=>{
 
 export const logoutCustomer = async (req, res) => {
     try {
-        res.clearCookie("token", cookieOptions);
+        res.clearCookie("token", {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? "none" : "lax",
+            path: "/"
+        });
 
         res.status(200).json({
             success: true,

@@ -41,18 +41,15 @@ export const getProducts = async (req, res) => {
         const { search, category } = req.query;
         let query = {};
 
-        if (category) {
-            query.category = category;
+        if (category && category !== 'All') {
+            query.category = { $regex: `^${category}$`, $options: 'i' };
         }
 
-        let products = await Product.find(query).select('_id name price category image stock');
-
-        if (search) {
-            const searchLower = search.toLowerCase();
-            products = products.filter(product =>
-                product.name.toLowerCase().includes(searchLower)
-            );
+        if (search && search.trim()) {
+            query.name = { $regex: search.trim(), $options: 'i' };
         }
+
+        const products = await Product.find(query).select('_id name price category image stock');
 
         return res.status(200).json({
             success: true,

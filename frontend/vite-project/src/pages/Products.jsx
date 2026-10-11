@@ -1,14 +1,25 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar.jsx';
 import ProductCard from '../components/ProductCard.jsx';
 import axiosInstance from '../../axiosCalls/axios';
 
 function Products() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlCategory = searchParams.get('category') || '';
+  const urlSearch = searchParams.get('search') || '';
+
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('');
+  const [search, setSearch] = useState(urlSearch);
+  const [category, setCategory] = useState(urlCategory);
+
+  // Sync state if URL query params change (e.g. navigation from Home)
+  useEffect(() => {
+    setCategory(urlCategory);
+    setSearch(urlSearch);
+  }, [urlCategory, urlSearch]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -16,6 +27,24 @@ function Products() {
     }, 300);
     return () => clearTimeout(timer);
   }, [search, category]);
+
+  const handleCategoryChange = (e) => {
+    const val = e.target.value;
+    setCategory(val);
+    const newParams = new URLSearchParams(searchParams);
+    if (val) newParams.set('category', val);
+    else newParams.delete('category');
+    setSearchParams(newParams, { replace: true });
+  };
+
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearch(val);
+    const newParams = new URLSearchParams(searchParams);
+    if (val) newParams.set('search', val);
+    else newParams.delete('search');
+    setSearchParams(newParams, { replace: true });
+  };
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -55,13 +84,13 @@ function Products() {
             type="text"
             placeholder="Search products..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={handleSearchChange}
             style={{ flex: '1 1 300px', padding: '0.75rem 1rem', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '1rem', outline: 'none', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}
           />
 
           <select
             value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            onChange={handleCategoryChange}
             style={{ padding: '0.75rem 1rem', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '1rem', outline: 'none', background: '#fff', minWidth: '200px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}
           >
             <option value="">All Categories</option>
