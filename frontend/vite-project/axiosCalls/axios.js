@@ -1,6 +1,7 @@
-import axios from 'axios'
+import axios from 'axios';
 
-const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+const isProduction = import.meta.env.PROD;
+const apiUrl = import.meta.env.VITE_API_URL || (isProduction ? '/api' : 'http://localhost:8081');
 
 const axiosInstance = axios.create({
     baseURL: apiUrl.replace(/\/+$/, ''),
@@ -8,6 +9,6 @@ const axiosInstance = axios.create({
     headers: {
         "Content-Type": 'application/json'
     }
-})
+});
 
-export default axiosInstance
+export default axiosInstance;
